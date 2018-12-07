@@ -1,0 +1,13 @@
+diff --git a/views/site/index.php b/views/site/index.php
+index f780610..f50799f 100644
+--- a/views/site/index.php
++++ b/views/site/index.php
+@@ -7,7 +7,7 @@ $this->title = 'My Yii Application';
+ <div class="site-index">
+ 
+     <div class="jumbotron">
+-        <h1>Congratulations!</h1>
++        <h1>Congratulations 3PPL!</h1>
+ 
+         <p class="lead">You have successfully created your Yii-powered application.</p>
+ 

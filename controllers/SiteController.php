@@ -9,6 +9,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\Pengguna;
 
 class SiteController extends Controller
 {
@@ -61,6 +62,7 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        return $this->redirect(['site/main']);
         return $this->render('index');
     }
 
@@ -72,11 +74,13 @@ class SiteController extends Controller
     public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+            return $this->redirect(['main']);
+            // return $this->goHome();
         }
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            return $this->redirect(['main']);
             return $this->goBack();
         }
 
@@ -94,6 +98,7 @@ class SiteController extends Controller
     public function actionLogout()
     {
         Yii::$app->user->logout();
+        return $this->redirect(['site/login']);
 
         return $this->goHome();
     }
@@ -125,4 +130,61 @@ class SiteController extends Controller
     {
         return $this->render('about');
     }
+
+    public function actionMain()
+    {
+        if(!isset(Yii::$app->user->identity->id_pengguna))
+            return $this->redirect(['site/login']);
+        return $this->render('main');
+    }
+
+    public function actionRegister()
+    {
+        $model = new Pengguna();
+
+        if ($model->load(Yii::$app->request->post())) {
+            $model->katalaluan = md5($model->katalaluan);
+            $model->katalaluan_ulang = $model->katalaluan;
+            if($model->save())
+                return $this->redirect(['view', 'id' => $model->id_pengguna]);
+            return print_r($model->getErrors());
+        }
+        return $this->render('register', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionForgot()
+    {
+        $model = new Pengguna();
+        $status = 0;
+        
+        if ($model->load(Yii::$app->request->post())) {
+            $no_kp = Yii::$app->request->post('Pengguna')['no_kp'];
+            $email = Yii::$app->request->post('Pengguna')['email'];
+            $pengguna = Pengguna::find()->where(['no_kp' => $no_kp, 'email' => $email])->all();
+            $total_pengguna = count($pengguna);
+            if ($total_pengguna > 0) {
+                Yii::$app->mailer->compose()
+                    ->setTo($email)
+                    ->setFrom([$pengguna[0]->email => $pengguna[0]->nama])
+                    ->setSubject('katalaluan 3PPPeL')
+                    ->setTextBody('katalaluan adalah '.$pengguna[0]->katalaluan)
+                    ->send();
+
+                $status = 1;
+            }
+            else
+                $status = 2;
+        }
+        
+        return $this->render('forgot', ['model' => $model, 'status' => $status]);
+    }
+
+    // public function actionTest()
+    // {
+    //     $x = [1];
+    //     $total = is_array($x) ? count($x) : 0;
+    //     echo $total;
+    // }
 }
